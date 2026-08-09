@@ -28,14 +28,7 @@ import java.util.*
 fun ProductManagementScreen(
     onProductClick: (String) -> Unit,
     onBack: () -> Unit,
-    productRepository: ProductRepository = hiltViewModel<com.beershop.pos.ui.viewmodel.AuthViewModel>().let {
-        // This will be resolved by Hilt at runtime
-        // For now placeholder
-        @Suppress("UNCHECKED_CAST")
-        (androidx.compose.ui.platform.LocalContext.current)
-        object : com.beershop.pos.data.local.dao.ProductDao {}
-        // Will work with proper DI
-    }
+    authViewModel: com.beershop.pos.ui.viewmodel.AuthViewModel = hiltViewModel()
 ) {
     var products by remember { mutableStateOf<List<ProductEntity>>(emptyList()) }
     var selectedCategory by remember { mutableStateOf<String?>(null) }
