@@ -2,7 +2,6 @@ package com.beershop.pos.ui.screens
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
@@ -14,38 +13,58 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.beershop.pos.data.local.entity.*
-import com.beershop.pos.data.repository.ProductRepository
+import com.beershop.pos.ui.viewmodel.ProductManagementViewModel
 import java.text.NumberFormat
 import java.util.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProductManagementScreen(
-    onProductClick: (String) -> Unit,
     onBack: () -> Unit,
-    viewModel: com.beershop.pos.ui.viewmodel.ProductManagementViewModel = hiltViewModel()
+    viewModel: ProductManagementViewModel = hiltViewModel()
 ) {
-    var products by remember { mutableStateOf<List<ProductEntity>>(emptyList()) }
+    val state by viewModel.state.collectAsState()
+    val products = state.products
+    val numberFormat = NumberFormat.getNumberInstance(Locale.US)
+
     var selectedCategory by remember { mutableStateOf<String?>(null) }
     var searchQuery by remember { mutableStateOf("") }
-    val numberFormat = NumberFormat.getNumberInstance(Locale.US)
+    var showAddDialog by remember { mutableStateOf(false) }
+
+    // Filter locally
+    val filteredProducts = remember(products, selectedCategory, searchQuery) {
+        var result = products
+        if (selectedCategory != null) {
+            result = result.filter { it.category == selectedCategory }
+        }
+        if (searchQuery.isNotBlank()) {
+            val q = searchQuery.lowercase()
+            result = result.filter {
+                it.name.lowercase().contains(q) ||
+                it.nameMyanmar.contains(q) ||
+                (it.barcode?.contains(q) == true)
+            }
+        }
+        result
+    }
 
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Products / ပစ္စည်းများ") },
+                title = { Text("Products / \u1015\u1005\u1039\u1005\u100a\u103a\u1038\u1019\u103b\u102c\u1038") },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(Icons.Default.ArrowBack, contentDescription = "Back")
                     }
                 },
                 actions = {
-                    IconButton(onClick = { onProductClick("new") }) {
+                    IconButton(onClick = { showAddDialog = true }) {
                         Icon(Icons.Default.Add, contentDescription = "Add Product")
                     }
                 },
@@ -66,8 +85,12 @@ fun ProductManagementScreen(
             // Search
             OutlinedTextField(
                 value = searchQuery,
-                onValueChange = { searchQuery = it },
-                label = { Text("Search / ရှာရန်") },
+                onValueChange = {
+                    searchQuery = it
+                    if (it.isNotBlank()) viewModel.searchProducts(it)
+                    else viewModel.loadProducts()
+                },
+                label = { Text("Search / \u101b\u103e\u102c\u101b\u1014\u103a") },
                 leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
                 modifier = Modifier
                     .fillMaxWidth()
@@ -87,120 +110,148 @@ fun ProductManagementScreen(
                     onClick = { selectedCategory = null },
                     label = { Text("All") }
                 )
-                ProductCategory.ALL.take(5).forEach { cat ->
+                ProductCategory.ALL.forEach { cat ->
                     FilterChip(
                         selected = selectedCategory == cat,
                         onClick = { selectedCategory = cat },
-                        label = { Text("${ProductCategory.emoji(cat)} ${ProductCategory.displayName(cat)}") }
+                        label = { Text("${ProductCategory.emoji(cat)} ${ProductCategory.displayName(cat)}", fontSize = 12.sp) }
                     )
                 }
             }
 
+            if (state.isLoading) {
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    CircularProgressIndicator()
+                }
+                return@Column
+            }
+
             // Product Grid
-            LazyVerticalGrid(
-                columns = GridCells.Fixed(2),
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(12.dp),
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                items(products) { product ->
-                    Card(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clickable { onProductClick(product.id) },
-                        shape = RoundedCornerShape(12.dp),
-                        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
-                    ) {
-                        Column(
-                            modifier = Modifier.padding(12.dp)
-                        ) {
-                            Text(
-                                "${ProductCategory.emoji(product.category)}",
-                                fontSize = 28.sp
-                            )
-                            Spacer(modifier = Modifier.height(4.dp))
-                            Text(
-                                product.name,
-                                style = MaterialTheme.typography.titleSmall,
-                                fontWeight = FontWeight.Bold,
-                                maxLines = 2,
-                                overflow = TextOverflow.Ellipsis
-                            )
-                            if (product.nameMyanmar.isNotBlank()) {
-                                Text(
-                                    product.nameMyanmar,
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                    maxLines = 1,
-                                    overflow = TextOverflow.Ellipsis
-                                )
-                            }
-                            Spacer(modifier = Modifier.height(4.dp))
-                            Text(
-                                "Ks ${numberFormat.format(product.sellingPrice.toLong())}",
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.primary
-                            )
-                            Text(
-                                "Stock: ${product.stockQuantity} ${product.unit}",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = if (product.stockQuantity <= 0)
-                                    MaterialTheme.colorScheme.error
-                                else
-                                    MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                            if (!product.isActive) {
-                                Text(
-                                    "INACTIVE",
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.error,
-                                    fontWeight = FontWeight.Bold
-                                )
-                            }
+            if (filteredProducts.isEmpty()) {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Icon(
+                            Icons.Default.Inventory2,
+                            contentDescription = null,
+                            modifier = Modifier.size(64.dp),
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Spacer(modifier = Modifier.height(12.dp))
+                        Text(
+                            "No products yet\n\u1015\u1005\u1039\u1005\u100a\u103a\u1038\u1019\u101b\u103e\u102d\u101e\u1038",
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            textAlign = TextAlign.Center
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Button(onClick = { showAddDialog = true }) {
+                            Icon(Icons.Default.Add, contentDescription = null)
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text("Add Product")
                         }
                     }
                 }
-
-                if (products.isEmpty()) {
-                    item {
-                        Card(
-                            modifier = Modifier.fillMaxWidth(),
-                            colors = CardDefaults.cardColors(
-                                containerColor = MaterialTheme.colorScheme.surfaceVariant
-                            )
-                        ) {
-                            Column(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(24.dp),
-                                horizontalAlignment = Alignment.CenterHorizontally
-                            ) {
-                                Icon(
-                                    Icons.Default.Inventory2,
-                                    contentDescription = null,
-                                    modifier = Modifier.size(48.dp)
-                                )
-                                Spacer(modifier = Modifier.height(8.dp))
-                                Text(
-                                    "No products yet\nTap + to add products",
-                                    textAlign = androidx.compose.ui.text.style.TextAlign.Center
-                                )
-                            }
-                        }
+            } else {
+                LazyVerticalGrid(
+                    columns = GridCells.Fixed(2),
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(12.dp),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    items(filteredProducts, key = { it.id }) { product ->
+                        ProductCard(
+                            product = product,
+                            numberFormat = numberFormat,
+                            onClick = { /* edit product */ }
+                        )
                     }
                 }
             }
         }
     }
+
+    // Add Product Dialog
+    if (showAddDialog) {
+        AddProductDialog(
+            onDismiss = { showAddDialog = false },
+            onSave = { name, nameMm, cat, sellPrice, costPrice, stock, unit, barcode, tax ->
+                viewModel.addProduct(
+                    name = name,
+                    nameMyanmar = nameMm,
+                    category = cat,
+                    sellingPrice = sellPrice,
+                    costPrice = costPrice,
+                    stock = stock,
+                    unit = unit,
+                    barcode = barcode,
+                    taxRate = tax
+                )
+                showAddDialog = false
+            }
+        )
+    }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ProductFormScreen(
-    onBack: () -> Unit
+fun ProductCard(
+    product: ProductEntity,
+    numberFormat: NumberFormat,
+    onClick: () -> Unit
+) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick),
+        shape = RoundedCornerShape(12.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+    ) {
+        Column(modifier = Modifier.padding(12.dp)) {
+            Text("${ProductCategory.emoji(product.category)}", fontSize = 28.sp)
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(
+                product.name,
+                style = MaterialTheme.typography.titleSmall,
+                fontWeight = FontWeight.Bold,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis
+            )
+            if (product.nameMyanmar.isNotBlank()) {
+                Text(
+                    product.nameMyanmar,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(
+                "Ks ${numberFormat.format(product.sellingPrice.toLong())}",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.primary
+            )
+            Text(
+                "Stock: ${product.stockQuantity} ${product.unit}",
+                style = MaterialTheme.typography.bodySmall,
+                color = if (product.stockQuantity <= 0)
+                    MaterialTheme.colorScheme.error
+                else
+                    MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+    }
+}
+
+@Composable
+fun AddProductDialog(
+    onDismiss: () -> Unit,
+    onSave: (String, String, String, Double, Double, Double, String, String?, Double) -> Unit
 ) {
     var name by remember { mutableStateOf("") }
     var nameMyanmar by remember { mutableStateOf("") }
@@ -208,80 +259,43 @@ fun ProductFormScreen(
     var sellingPrice by remember { mutableStateOf("") }
     var costPrice by remember { mutableStateOf("") }
     var stockQuantity by remember { mutableStateOf("") }
-    var unit by remember { mutableStateOf("ဘူး") }
+    var unit by remember { mutableStateOf("\u1018\u1030\u1038") }
     var barcode by remember { mutableStateOf("") }
     var taxRate by remember { mutableStateOf("5") }
-    var showCategoryPicker by remember { mutableStateOf(false) }
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("Add Product / ပစ္စည်းအသစ်") },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Back")
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.primary,
-                    titleContentColor = MaterialTheme.colorScheme.onPrimary,
-                    navigationIconContentColor = MaterialTheme.colorScheme.onPrimary
-                )
-            )
-        }
-    ) { padding ->
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding)
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            item {
-                Text("Product Information", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-            }
-
-            item {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Add Product / \u1015\u1005\u1039\u1005\u100a\u103a\u1038\u1021\u101e\u1005\u103a") },
+        text = {
+            Column(
+                verticalArrangement = Arrangement.spacedBy(10.dp),
+                modifier = Modifier.verticalScroll(rememberScrollState())
+            ) {
                 OutlinedTextField(
                     value = name,
                     onValueChange = { name = it },
-                    label = { Text("Product Name / ပစ္စည်းအမည် *") },
+                    label = { Text("Name *") },
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true
                 )
-            }
-
-            item {
                 OutlinedTextField(
                     value = nameMyanmar,
                     onValueChange = { nameMyanmar = it },
-                    label = { Text("Myanmar Name / မြန်မာအမည်") },
+                    label = { Text("Myanmar Name") },
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true
                 )
-            }
-
-            item {
-                Text("Category / အမျိုးအစား", style = MaterialTheme.typography.bodyMedium)
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
+                Text("Category", style = MaterialTheme.typography.bodyMedium)
+                Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                     ProductCategory.ALL.forEach { cat ->
                         FilterChip(
                             selected = category == cat,
                             onClick = { category = cat },
-                            label = { Text(ProductCategory.displayName(cat), fontSize = 11.sp) }
+                            label = { Text(ProductCategory.emoji(cat), fontSize = 14.sp) }
                         )
                     }
                 }
-            }
-
-            item {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     OutlinedTextField(
                         value = sellingPrice,
                         onValueChange = { sellingPrice = it },
@@ -299,13 +313,7 @@ fun ProductFormScreen(
                         singleLine = true
                     )
                 }
-            }
-
-            item {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     OutlinedTextField(
                         value = stockQuantity,
                         onValueChange = { stockQuantity = it },
@@ -321,24 +329,13 @@ fun ProductFormScreen(
                         singleLine = true
                     )
                 }
-            }
-
-            item {
                 OutlinedTextField(
                     value = barcode,
                     onValueChange = { barcode = it },
                     label = { Text("Barcode (optional)") },
                     modifier = Modifier.fillMaxWidth(),
-                    singleLine = true,
-                    trailingIcon = {
-                        IconButton(onClick = { /* Scan barcode */ }) {
-                            Icon(Icons.Default.QrCodeScanner, contentDescription = "Scan")
-                        }
-                    }
+                    singleLine = true
                 )
-            }
-
-            item {
                 OutlinedTextField(
                     value = taxRate,
                     onValueChange = { taxRate = it },
@@ -348,24 +345,31 @@ fun ProductFormScreen(
                     trailingIcon = { Text("%") }
                 )
             }
-
-            item {
-                Spacer(modifier = Modifier.height(16.dp))
-                Button(
-                    onClick = {
-                        // Save product
-                        if (name.isNotBlank() && sellingPrice.isNotBlank()) {
-                            onBack()
-                        }
-                    },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(56.dp),
-                    enabled = name.isNotBlank() && sellingPrice.isNotBlank()
-                ) {
-                    Text("Save Product / သိမ်းမည်", style = MaterialTheme.typography.titleMedium)
-                }
+        },
+        confirmButton = {
+            Button(
+                onClick = {
+                    val price = sellingPrice.toDoubleOrNull() ?: 0.0
+                    val cost = costPrice.toDoubleOrNull() ?: 0.0
+                    val stock = stockQuantity.toDoubleOrNull() ?: 0.0
+                    val tax = taxRate.toDoubleOrNull() ?: 0.0
+                    if (name.isNotBlank() && price > 0) {
+                        onSave(name, nameMyanmar, category, price, cost, stock, unit, barcode.ifBlank { null }, tax)
+                    }
+                },
+                enabled = name.isNotBlank() && (sellingPrice.toDoubleOrNull() ?: 0.0) > 0
+            ) {
+                Text("Save / \u101e\u102d\u1019\u103a\u1038\u1019\u100a\u103a")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Cancel")
             }
         }
-    }
+    )
 }
+
+// Helper
+@Composable
+private fun rememberScrollState() = androidx.compose.foundation.rememberScrollState()
