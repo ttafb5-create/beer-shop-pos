@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- Beer mug icon -->
+    <path
+        android:fillColor="#FFB71C1C"
+        android:pathData="M54,54m-40,0a40,40 0,1 1,80 0a40,40 0,1 1,-80 0" />
+    <!-- Beer foam -->
+    <path
+        android:fillColor="#FFFFC107"
+        android:pathData="M34,40 Q34,32 42,28 Q50,24 58,28 Q66,24 74,28 Q82,32 82,40 L82,42 Q82,36 74,32 Q66,28 58,32 Q50,28 42,32 Q34,36 34,42 Z" />
+    <!-- Beer glass body -->
+    <path
+        android:fillColor="#FFFFD54F"
+        android:pathData="M38,45 L38,78 Q38,82 42,82 L66,82 Q70,82 70,78 L70,45 Z" />
+</vector>
