@@ -10,9 +10,7 @@ sealed class Screen(val route: String) {
             "table_order/$tableId/$orderId"
     }
     object ProductManagement : Screen("products")
-    object ProductForm : Screen("product_form/{productId}") {
-        fun createRoute(productId: String = "new") = "product_form/$productId"
-    }
+    // ProductForm removed - using dialog instead
     object Payment : Screen("payment/{orderId}") {
         fun createRoute(orderId: String) = "payment/$orderId"
     }
@@ -29,6 +27,5 @@ sealed class Screen(val route: String) {
 object NavigationArgs {
     const val TABLE_ID = "tableId"
     const val ORDER_ID = "orderId"
-    const val PRODUCT_ID = "productId"
     const val REPORT_TYPE = "reportType"
 }
