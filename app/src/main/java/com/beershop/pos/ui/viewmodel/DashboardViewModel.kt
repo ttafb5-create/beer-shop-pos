@@ -19,7 +19,7 @@ data class DashboardState(
     val cashBalance: Double = 0.0,
     val walletBalance: Double = 0.0,
     val recentOrders: List<OrderEntity> = emptyList(),
-    val salesBreakdown: List<PaymentDao.MethodBreakdown> = emptyList(),
+    val salesBreakdown: List<com.beershop.pos.data.local.dao.PaymentDao.MethodBreakdown> = emptyList(),
     val isLoading: Boolean = true
 )
 
