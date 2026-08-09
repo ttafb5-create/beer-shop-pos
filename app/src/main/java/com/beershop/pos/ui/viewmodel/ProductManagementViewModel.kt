@@ -27,23 +27,37 @@ class ProductManagementViewModel @Inject constructor(
         loadProducts()
     }
 
-    private fun loadProducts() {
+    fun loadProducts() {
         viewModelScope.launch {
+            _state.update { it.copy(isLoading = true) }
             productDao.getAllProducts().collect { products ->
                 _state.update { it.copy(products = products, isLoading = false) }
             }
         }
     }
 
-    fun addProduct(name: String, price: Double, category: String, unit: String = "Bottle", stock: Double = 0.0) {
+    fun addProduct(
+        name: String,
+        nameMyanmar: String = "",
+        category: String = "BEER",
+        sellingPrice: Double,
+        costPrice: Double = 0.0,
+        stock: Double = 0.0,
+        unit: String = "\u1018\u1030\u1038",
+        barcode: String? = null,
+        taxRate: Double = 0.0
+    ) {
         viewModelScope.launch {
             val product = ProductEntity(
                 name = name,
-                sellingPrice = price,
-                costPrice = 0.0,
+                nameMyanmar = nameMyanmar,
                 category = category,
+                sellingPrice = sellingPrice,
+                costPrice = costPrice,
+                stockQuantity = stock,
                 unit = unit,
-                stockQuantity = stock
+                barcode = barcode,
+                taxRate = taxRate
             )
             productDao.insertProduct(product)
         }
@@ -55,7 +69,7 @@ class ProductManagementViewModel @Inject constructor(
         }
     }
 
-    fun deleteProduct(productId: String) {
+    fun deactivateProduct(productId: String) {
         viewModelScope.launch {
             productDao.deactivateProduct(productId)
         }
@@ -63,12 +77,9 @@ class ProductManagementViewModel @Inject constructor(
 
     fun searchProducts(query: String) {
         viewModelScope.launch {
-            if (query.isBlank()) {
-                loadProducts()
-            } else {
-                productDao.searchProducts(query).collect { products ->
-                    _state.update { it.copy(products = products) }
-                }
+            _state.update { it.copy(isLoading = true) }
+            productDao.searchProducts(query).collect { products ->
+                _state.update { it.copy(products = products, isLoading = false) }
             }
         }
     }
