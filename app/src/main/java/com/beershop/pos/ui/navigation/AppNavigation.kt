@@ -82,20 +82,6 @@ fun AppNavigation(
 
         composable(Screen.ProductManagement.route) {
             ProductManagementScreen(
-                onProductClick = { productId ->
-                    navController.navigate(Screen.ProductForm.createRoute(productId))
-                },
-                onBack = { navController.popBackStack() }
-            )
-        }
-
-        composable(
-            route = Screen.ProductForm.route,
-            arguments = listOf(
-                navArgument(NavigationArgs.PRODUCT_ID) { type = NavType.StringType }
-            )
-        ) {
-            ProductFormScreen(
                 onBack = { navController.popBackStack() }
             )
         }
