@@ -39,10 +39,10 @@ class ProductManagementViewModel @Inject constructor(
         viewModelScope.launch {
             val product = ProductEntity(
                 name = name,
-                price = price,
+                sellingPrice = price,
                 category = category,
                 unit = unit,
-                stock = stock
+                stockQuantity = stock
             )
             productDao.insertProduct(product)
         }
