@@ -77,6 +77,6 @@ class AuthViewModel @Inject constructor(
 
     fun hasPermission(action: com.beershop.pos.data.local.entity.Action): Boolean {
         val role = _authState.value.currentUser?.role ?: return false
-        return authRepository.hasPermission(role, action)
+        return com.beershop.pos.data.local.entity.UserRole.hasPermission(role, action)
     }
 }
