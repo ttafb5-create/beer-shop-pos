@@ -10,9 +10,6 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 import javax.inject.Singleton
 
 @Module
@@ -28,21 +25,18 @@ object DatabaseModule {
             "beershop_pos.db"
         )
             .fallbackToDestructiveMigration()
-            .addCallback(object : androidx.room.RoomDatabase.Callback() {
-                override fun onCreate(db: androidx.sqlite.db.SupportSQLiteDatabase) {
-                    super.onCreate(db)
-                    CoroutineScope(Dispatchers.IO).launch {
-                        val database = provideDatabase(context)
-                        DataInitializer(
-                            database.userDao(),
-                            database.productDao(),
-                            database.tableDao(),
-                            database.settingsDao()
-                        ).initialize()
-                    }
-                }
-            })
             .build()
+    }
+
+    @Provides
+    @Singleton
+    fun provideDataInitializer(
+        userDao: UserDao,
+        productDao: ProductDao,
+        tableDao: TableDao,
+        settingsDao: SettingsDao
+    ): DataInitializer {
+        return DataInitializer(userDao, productDao, tableDao, settingsDao)
     }
 
     @Provides fun provideUserDao(db: AppDatabase): UserDao = db.userDao()
