@@ -28,7 +28,7 @@ import java.util.*
 fun ProductManagementScreen(
     onProductClick: (String) -> Unit,
     onBack: () -> Unit,
-    authViewModel: com.beershop.pos.ui.viewmodel.AuthViewModel = hiltViewModel()
+    viewModel: com.beershop.pos.ui.viewmodel.ProductManagementViewModel = hiltViewModel()
 ) {
     var products by remember { mutableStateOf<List<ProductEntity>>(emptyList()) }
     var selectedCategory by remember { mutableStateOf<String?>(null) }
