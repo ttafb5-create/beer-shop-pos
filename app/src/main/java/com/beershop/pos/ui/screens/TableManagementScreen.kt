@@ -113,7 +113,7 @@ fun TableManagementScreen(
                 StatusBadge("Reserved", Color(0xFFFFC107), tables.count { it.status == TableStatus.RESERVED })
                 StatusBadge("Held", Color(0xFF9C27B0), tables.count { it.status == TableStatus.HELD })
             }
-            HorizontalDivider()
+            Divider()
 
             // Table Grid
             LazyVerticalGrid(
