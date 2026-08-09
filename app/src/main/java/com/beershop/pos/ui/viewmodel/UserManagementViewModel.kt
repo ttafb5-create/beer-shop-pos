@@ -39,7 +39,7 @@ class UserManagementViewModel @Inject constructor(
         viewModelScope.launch {
             val user = UserEntity(
                 username = username,
-                password = password,  // In production, hash this!
+                passwordHash = password,  // In production, hash this!
                 displayName = displayName,
                 role = role
             )
