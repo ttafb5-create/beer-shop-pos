@@ -40,6 +40,7 @@ class ProductManagementViewModel @Inject constructor(
             val product = ProductEntity(
                 name = name,
                 sellingPrice = price,
+                costPrice = 0.0,
                 category = category,
                 unit = unit,
                 stockQuantity = stock
@@ -65,7 +66,7 @@ class ProductManagementViewModel @Inject constructor(
             if (query.isBlank()) {
                 loadProducts()
             } else {
-                productDao.searchProducts("%$query%").collect { products ->
+                productDao.searchProducts(query).collect { products ->
                     _state.update { it.copy(products = products) }
                 }
             }
