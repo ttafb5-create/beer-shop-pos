@@ -1,0 +1,22 @@
+*.iml
+.gradle
+/local.properties
+/.idea
+.DS_Store
+/build
+/captures
+.externalNativeBuild
+.cxx
+local.properties
+
+# Keystore files (DO NOT COMMIT)
+*.keystore
+*.jks
+keystore.properties
+
+# App signing key - NEVER commit this
+/app/release/
+/app/*.keystore
+
+# Gradle wrapper jar - tracked by git
+!gradle/wrapper/gradle-wrapper.jar
