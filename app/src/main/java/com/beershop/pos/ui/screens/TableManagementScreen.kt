@@ -32,7 +32,6 @@ import kotlinx.coroutines.flow.collectLatest
 fun TableManagementScreen(
     onTableClick: (String, String?) -> Unit,
     onBack: () -> Unit) {
-) {
     // For now, we'll use Compose state directly with table lists
     var tables by remember { mutableStateOf<List<TableEntity>>(emptyList()) }
     var selectedZone by remember { mutableStateOf("All") }
