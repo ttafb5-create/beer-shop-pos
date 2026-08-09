@@ -33,8 +33,8 @@ class OrderRepository @Inject constructor(
         return order
     }
 
-    fun getOrderById(orderId: String) = orderDao.getOrderById(orderId)
-    fun getOpenOrderForTable(tableId: String) = orderDao.getOpenOrderForTable(tableId)
+    suspend fun getOrderById(orderId: String) = orderDao.getOrderById(orderId)
+    suspend fun getOpenOrderForTable(tableId: String) = orderDao.getOpenOrderForTable(tableId)
     fun getOrderItems(orderId: String): Flow<List<OrderItemEntity>> = orderItemDao.getItemsForOrder(orderId)
     suspend fun getOrderItemsSync(orderId: String) = orderItemDao.getItemsForOrderSync(orderId)
     fun getOpenOrders(): Flow<List<OrderEntity>> = orderDao.getOpenOrders()
