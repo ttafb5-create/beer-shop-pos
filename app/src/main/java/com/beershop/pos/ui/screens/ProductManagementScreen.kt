@@ -251,6 +251,7 @@ fun ProductCard(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddProductDialog(
     onDismiss: () -> Unit,
