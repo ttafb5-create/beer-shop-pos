@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="primary">#FFB71C1C</color>
+    <color name="primary_dark">#FFEF5350</color>
+    <color name="on_primary">#FFFFFFFF</color>
+    <color name="on_primary_dark">#FF000000</color>
+    <color name="primary_container">#FFFFDAD6</color>
+    <color name="primary_container_dark">#FF93000A</color>
+    <color name="secondary">#FF775656</color>
+    <color name="secondary_dark">#FFD7BBB9</color>
+    <color name="on_secondary">#FFFFFFFF</color>
+    <color name="secondary_container">#FFFFDAD6</color>
+    <color name="tertiary">#FF71592F</color>
+    <color name="error">#FFBA1A1A</color>
+    <color name="surface">#FFFFFBFF</color>
+    <color name="surface_dark">#FF1C1B1F</color>
+    <color name="on_surface">#FF1C1B1F</color>
+    <color name="on_surface_dark">#FFE6E1E5</color>
+    <color name="background">#FFFFFBFF</color>
+    <color name="background_dark">#FF1C1B1F</color>
+    <color name="on_background">#FF1C1B1F</color>
+
+    <!-- Table Status Colors -->
+    <color name="table_available">#FF4CAF50</color>
+    <color name="table_occupied">#FFFF5722</color>
+    <color name="table_reserved">#FFFFC107</color>
+    <color name="table_held">#FF9C27B0</color>
+    <color name="table_closed">#FF9E9E9E</color>
+
+    <!-- Dashboard Colors -->
+    <color name="sales_green">#FF2E7D32</color>
+    <color name="wallet_blue">#FF1565C0</color>
+    <color name="cash_green">#FF388E3C</color>
+    <color name="pending_orange">#FFEF6C00</color>
+</resources>
