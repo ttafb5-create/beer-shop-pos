@@ -31,12 +31,7 @@ import kotlinx.coroutines.flow.collectLatest
 @Composable
 fun TableManagementScreen(
     onTableClick: (String, String?) -> Unit,
-    onBack: () -> Unit,
-    tableRepository: TableRepository = hiltViewModel<com.beershop.pos.ui.viewmodel.TableOrderViewModel>().let {
-        // We'll create a simpler approach - use the repository directly
-        androidx.compose.ui.platform.LocalContext.current
-        // Will be properly injected via Hilt
-    }
+    onBack: () -> Unit) {
 ) {
     // For now, we'll use Compose state directly with table lists
     var tables by remember { mutableStateOf<List<TableEntity>>(emptyList()) }
