@@ -325,5 +325,5 @@ fun PaymentMethodRow(
             fontWeight = FontWeight.Bold
         )
     }
-    HorizontalDivider()
+    Divider()
 }
